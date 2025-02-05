@@ -1,5 +1,3 @@
-
-
 pipeline {
     agent any
 
@@ -13,9 +11,8 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo 'Building the code'
+                echo 'Building the Docker image'
                 sh "docker build -t portfolio-app ."
-                sh "docker run -d -p 5173:5173 portfolio-app"
             }
         }
 
@@ -24,18 +21,18 @@ pipeline {
                 echo 'Pushing to DockerHub'
                 withCredentials([usernamePassword(credentialsId: 'dockerHub', passwordVariable: 'dockerHubPassword', usernameVariable: 'dockerHubUser')]) {
                     sh "docker login -u ${dockerHubUser} -p ${dockerHubPassword}"
-                    sh "docker tag hospital-app ${dockerHubUser}/portfolio-app:latest"
+                    sh "docker tag portfolio-app ${dockerHubUser}/portfolio-app:latest"
                     sh "docker push ${dockerHubUser}/portfolio-app:latest"
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
-                echo 'Deploying the code'
-                // Add your deployment logic here (e.g., deploying to a server or Kubernetes)
+                echo 'Deploying to Kubernetes'
+                sh "kubectl apply -f deployment.yaml"
+                sh "kubectl apply -f service.yaml"
             }
         }
     }
 }
-
